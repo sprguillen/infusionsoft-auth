@@ -1,0 +1,34 @@
+{
+	"infusionsoft": {
+		"clientId": "bk3rbxyzwg8uhsmwj6d7vjun",
+		"clientSecret": "b8fXkRPmqt",
+		"redirectUri": "http://localhost:3000/redirect",
+		"token": {
+			"accessToken": "h3sj7ccquu9pm262ket634jf",
+			"refreshToken": "a46rx7n6s9g8g9gs6vrpdep2",
+			"expiresIn": 86400,
+			"expiresAt": "2018-08-10T07:34:12.564Z",
+			"extra": ""
+		},
+		"apiCheckToken": "/verifyConnection",
+		"sampleContactId": 7635
+	},
+	"nodemailer": {
+		"smtp": "smtp.gmail.com",
+		"email": "sprgtest23@gmail.com",
+		"password": "Testpassword",
+		"tlsPort": 587,
+		"sslPort": 465
+	},
+	"serverConfig": {
+		"hostname": "http://localhost",
+		"port": "3000",
+		"toEmail": [
+			"sprguillen@gmail.com",
+			"simonbass23@gmail.com"
+		]
+	},
+	"cbis": {
+		"pm2Name": "cbis-app"
+	}
+}
