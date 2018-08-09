@@ -157,18 +157,6 @@ app.get(infusionsoftConf.apiCheckToken, (req, res) => {
 	})
 })
 
-app.get('/testStart', (req, res) => {
-	exec.startProcess().then((response) => {
-		if (response) {
-			res.send(response.message)
-		}
-	}).catch((err) => {
-		if (err) {
-			res.send(err)
-		}
-	})
-})
-
 new cronJob('*/15 * * * *', () => {
 	request.get(serverConfig.hostname + ':' + serverConfig.port + infusionsoftConf.apiCheckToken)
 }, null, true, 'Pacific/Auckland')
