@@ -10,6 +10,7 @@ const exec = require('./exec.js')
 const http = require('http')
 const request = require('request')
 const moment = require('moment')
+require('console-stamp')(console, 'HH:MM:ss.l')
 
 let infusionsoftConf = conf.get('infusionsoft')
 let serverConfig = conf.get('serverConfig')
@@ -24,6 +25,7 @@ let {
 let infusionSoft = new ins(infusionsoftConf)
 
 app.get('/reauth', (req, res) => {
+	console.log("Initializing token reauthentication")
 	const authUrl = infusionSoft.getAuthorizationUrl()
 	res.redirect(authUrl)
 })
@@ -36,6 +38,7 @@ app.get('/redirect', (req, res) => {
 	} = req.query
 
 	infusionSoft.requestAccessToken(code).then(response => {
+		console.log('Successfully reauthenticated application')
 		let expiresAt = new Date()
 		expiresAt.setSeconds(expiresAt.getSeconds() + response.extra.data.expires_in)
 		let newValues = {
@@ -51,17 +54,20 @@ app.get('/redirect', (req, res) => {
 		exec.startProcess().then((response) => {
 			if (response) {
 				conf.update('infusionsoft', newValues)
+				console.log(response.message)
 				res.send(`Updated new token to configuration file and ${response.message}`)
 			}
 		}).catch((err) => {
 			if (err) {
 				conf.update('infusionsoft', newValues)
+				console.error(err)
 				res.send(`Updated new token to configuration file yet error on starting cbis-app: ${err}`)
 			}
 		})
 
 	}).catch(err => {
 		let errMsg = err.toString()
+		console.error(`Error on reauthenticating application ${errMsg}`)
 		mailer.sendEmail(serverConfig.toEmail, 
 			'Infusionsoft Request Access Token Error', 
 			errMsg
@@ -69,7 +75,7 @@ app.get('/redirect', (req, res) => {
 
 		exec.stopProcess().then((response) => {
 			if (response) {
-				res.send(`${response.message} Reauthentication error, email sent to ${serverConfig.toEmail}`)
+				res.send(`${response.message} - reauthentication error, email sent to ${serverConfig.toEmail}`)
 			}
 		}).catch((err) => {
 			if (err) {
@@ -80,8 +86,9 @@ app.get('/redirect', (req, res) => {
 })
 
 app.get('/refresh', (req, res) => {
-
+	console.log('Initializing token refresh...')
 	infusionSoft.refreshToken().then(response => {
+		console.log("Successfull refresh..")
 		let expiresAt = new Date()
 		expiresAt.setSeconds(expiresAt.getSeconds() + response.extra.data.expires_in)
 
@@ -95,19 +102,11 @@ app.get('/refresh', (req, res) => {
 			}
 		}
 
-		exec.startProcess().then((response) => {
-			if (response) {
-				conf.update('infusionsoft', newValues)
-				res.send(`Updated new token to configuration file and ${response.message}`)
-			}
-		}).catch((err) => {
-			if (err) {
-				conf.update('infusionsoft', newValues)
-				res.send(`Updated new token to configuration file yet error on starting cbis-app: ${err}`)
-			}
-		})
+		res.send('Updated new token to configuration file')
+		
 	}).catch(err => {
 		let errMsg = err.toString()
+		console.error(`Error on refreshing token: ${errMsg}. Please reauthenticate!`)
 		errMsg += ', please run ' + serverConfig.hostname + ':' + serverConfig.port + '/reauth ' +
 			'to reauthenticate to the infusionsoft server API.'
 
@@ -129,8 +128,10 @@ app.get('/refresh', (req, res) => {
 })
 
 app.get(infusionsoftConf.apiCheckToken, (req, res) => {
+	console.log('Initializing token check...')
 	db.checkContacts().then((response) => {
 		if (!response.queryStatus) {
+			console.log('Token invalid...')
 			request.get(serverConfig.hostname + ':' + serverConfig.port + '/refresh').pipe(res);
 		} else {
 			console.log('Token valid. Message: ' + response.message)
@@ -138,6 +139,7 @@ app.get(infusionsoftConf.apiCheckToken, (req, res) => {
 		}
 	}).catch((err) => {
 		let errMsg = err.toString()
+		console.error(`Token error found! ${errMsg}`)
 		errMsg += ', please run ' + serverConfig.hostname + ':' + serverConfig.port + '/reauth ' +
 			'to reauthenticate to the infusionsoft server API.'
 		mailer.sendEmail(serverConfig.toEmail, 

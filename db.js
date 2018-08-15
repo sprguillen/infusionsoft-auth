@@ -15,7 +15,9 @@ function checkContacts () {
 
 		let infusionSoft = new ins(infusionsoftConf)
 
+		console.log('Requesting contact details from Infusionsoft Server.')
 		infusionSoft.xml.contact.load(sci, ['email']).then(response => {
+			console.log(response)
 			var responseData;
 			response = JSON.parse(JSON.stringify(response))
 			if (response.email || response.name === 'XmlRpcApiError') {
